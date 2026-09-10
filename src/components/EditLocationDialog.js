@@ -25,7 +25,7 @@ class EditLocationDialog extends Component {
 
   constructor(props) {
     super(props);
-    this.codeMaxLength = props.modulesManager.getConf("fe-location", "locationForm.codeMaxLength", 8);
+    this.codeMaxLength = props.modulesManager.getConf("fe-location", "locationForm.codeMaxLength", 50);
   }
 
   keysFunction = (event) => {
