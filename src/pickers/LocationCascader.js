@@ -9,6 +9,7 @@ import { withTheme, withStyles } from "@material-ui/core/styles";
 import { useModulesManager, useTranslations } from "@openimis/fe-core";
 import { fetchLocationsStr, fetchLocationsByUuids } from "../actions";
 import { locationLabel } from "../utils";
+import { nextLocationLevels } from "../components/optionalWardPath";
 import _ from "lodash";
 
 const styles = () => ({
@@ -64,6 +65,7 @@ const LocationCascader = ({
   const maxLevel = parseInt(
     modulesManager.getConf("location", "Location.MaxLevels", 4)
   );
+  const locationTypes = modulesManager.getConf("fe-location", "Location.types", ["R", "D", "W", "V"]);
 
   const [options, setOptions] = useState([]);
   const [locations, setLocations] = useState(multiple ? [] : "");
@@ -91,31 +93,33 @@ const LocationCascader = ({
   const loadData = (selectedOptions) => {
     const targetOption = selectedOptions[selectedOptions.length - 1];
     const currentLevel = targetOption.level ?? selectedOptions.length - 1;
+    const levels = nextLocationLevels(currentLevel, maxLevel, locationTypes);
 
-    if (currentLevel + 1 >= maxLevel) {
+    if (!levels.length) {
       targetOption.isLeaf = true;
       return;
     }
 
     targetOption.loading = true;
-    pendingExpansion.current = { targetOption, level: currentLevel + 1 };
-    dispatch(fetchLocationsStr(modulesManager, currentLevel + 1, null, null, targetOption.raw));
+    pendingExpansion.current = { targetOption, levels };
+    levels.forEach((level) =>
+      dispatch(fetchLocationsStr(modulesManager, level, null, null, targetOption.raw))
+    );
   };
 
   useEffect(() => {
     if (!pendingExpansion.current) return;
 
-    const { targetOption, level } = pendingExpansion.current;
-    if (!locState[`fetchedL${level}s`]) return;
+    const { targetOption, levels } = pendingExpansion.current;
+    if (!levels.every((level) => locState[`fetchedL${level}s`])) return;
 
-    const children = locState[`l${level}s`]
-      .map((loc) => ({
+    const children = levels.flatMap((level) => (locState[`l${level}s`] || []).map((loc) => ({
         label: locationLabel(loc),
         value: loc.uuid,
         isLeaf: level + 1 >= maxLevel,
         level,
         raw: loc,
-      }));
+      })));
 
     targetOption.loading = false;
     targetOption.children = children;

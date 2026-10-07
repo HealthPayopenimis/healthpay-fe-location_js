@@ -9,6 +9,7 @@ import { withModulesManager, ControlledField, PublishedComponent } from "@openim
 import { selectLocation } from "../actions";
 import { DEFAULT_LOCATION_TYPES } from "../constants";
 import CoarseLocation from "./CoarseLocation";
+import { hasOptionalWard, locationPathState, selectFamilyLocation } from "./optionalWardPath";
 
 const styles = (theme) => ({
   dialogTitle: theme.dialog.title,
@@ -28,10 +29,16 @@ class DetailedLocation extends Component {
   constructor(props) {
     super(props);
     this.locationTypes = props.modulesManager.getConf("fe-location", "Location.types", DEFAULT_LOCATION_TYPES);
+    this.optionalWard = hasOptionalWard(this.locationTypes);
+    this.pendingClear = false;
   }
 
   computeState = () => {
     const { value } = this.props;
+    if (this.optionalWard) {
+      this.setState(locationPathState(value, this.locationTypes));
+      return;
+    }
     let region = !!value ? value.parent : null;
     let district = value;
     while (!!region && !!region.parent) {
@@ -56,6 +63,13 @@ class DetailedLocation extends Component {
 
   componentDidUpdate(prevProps, prevState, snapshot) {
     if (!_.isEqual(prevProps.value, this.props.value)) {
+      if (this.pendingClear && !this.props.value) {
+        // An intermediate district/W selection clears the saved V, but must
+        // not erase the user's in-progress picker selections.
+        this.pendingClear = false;
+        return;
+      }
+      this.pendingClear = false;
       this.computeState();
     }
   }
@@ -71,10 +85,27 @@ class DetailedLocation extends Component {
     }
     this.setState({ ...state }, (e) => {
       this.props.selectLocation(d, 1, this.locationTypes.length);
+      if (this.optionalWard && this.props.value) {
+        this.pendingClear = true;
+        this.props.onChange(null);
+      }
     });
   };
 
   onLocationChange = (l, v) => {
+    if (this.optionalWard) {
+      const { state, familyLocation } = selectFamilyLocation(this.state, l, v, this.locationTypes);
+      this.setState(state, () => {
+        this.props.selectLocation(v, l + 2, this.locationTypes.length);
+        if (l === this.locationTypes.length - 3) {
+          this.props.onChange(familyLocation);
+        } else if (this.props.value) {
+          this.pendingClear = true;
+          this.props.onChange(null);
+        }
+      });
+      return;
+    }
     let state = { ...this.state };
     let current = v;
     for (let i = l; i >= -2 && !!current; i--) {
@@ -126,9 +157,12 @@ class DetailedLocation extends Component {
                 <PublishedComponent
                   pubRef="location.LocationPicker"
                   value={this.state[`location_${i}`]}
-                  parentLocation={this.state[`location_${i - 1}`]}
+                  parentLocation={this.optionalWard && i === 1
+                    ? this.state.location_0 || this.state["location_-1"]
+                    : this.state[`location_${i - 1}`]}
                   readOnly={readOnly}
-                  required={required}
+                  required={required && !(this.optionalWard && i === 0)}
+                  optionalLabel={this.optionalWard && i === 0}
                   withNull={true}
                   filterLabels={filterLabels}
                   locationLevel={this.locationTypes.length - 2 + i}

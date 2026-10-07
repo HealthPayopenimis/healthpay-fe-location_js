@@ -16,6 +16,7 @@
   "location.LocationPicker.openText": "Open",
   "location.LocationPicker.closeText": "Close",
   "location.Location2Picker.label": "Municipality",
+  "location.Location2Picker.optionalLabel": "Municipality (optional)",
   "location.Location2Picker.null": "Any",
   "location.Location2Picker.none": "None",
   "location.Location3Picker.label": "Village",

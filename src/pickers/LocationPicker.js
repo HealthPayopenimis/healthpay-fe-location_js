@@ -34,6 +34,7 @@ const LocationPicker = (props) => {
     withPlaceholder,
     restrictedOptions,
     title = '',
+    optionalLabel = false,
   } = props;
   const [open, setOpen] = useState(false);
   const [resetKey, setResetKey] = useState();
@@ -129,7 +130,9 @@ const LocationPicker = (props) => {
           {...inputProps}
           variant="standard"
           required={required}
-          label={withLabel && (label || formatMessage(`Location${locationLevel}Picker.label`))}
+          label={withLabel && (label || formatMessage(
+            optionalLabel ? `Location${locationLevel}Picker.optionalLabel` : `Location${locationLevel}Picker.label`
+          ))}
           placeholder={
             withPlaceholder ? placeholder || formatMessage(`Location${locationLevel}Picker.placehoder`) : null
           }
