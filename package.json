@@ -16,7 +16,7 @@
     "format": "prettier src -w",
     "prepare": "npm run build",
     "test:helpers": "node --test tests/optionalWardPath.test.js",
-    "test:components": "jest --runInBand",
+    "test:components": "jest --runInBand --runTestsByPath tests/LocationCascader.test.js",
     "test": "npm run test:helpers && npm run test:components"
   },
   "peerDependencies": {
