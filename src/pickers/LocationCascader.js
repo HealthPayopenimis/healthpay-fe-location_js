@@ -7,9 +7,9 @@ import Cascader from "rc-cascader";
 import { TextField, Chip } from "@material-ui/core";
 import { withTheme, withStyles } from "@material-ui/core/styles";
 import { useModulesManager, useTranslations } from "@openimis/fe-core";
-import { fetchLocationsStr, fetchLocationsByUuids } from "../actions";
+import { fetchLocationsStr, fetchLocationsByUuids, locationQueryKey } from "../actions";
 import { locationLabel } from "../utils";
-import { nextLocationLevels, normalizeCascaderSelection } from "../components/optionalWardPath";
+import { nextLocationLevels, normalizeCascaderSelection, expansionStatus } from "../components/optionalWardPath";
 import _ from "lodash";
 
 const styles = () => ({
@@ -50,7 +50,7 @@ const extractPathFromValue = (location) => {
   };
 };
 
-const LocationCascader = ({
+export const LocationCascader = ({
   label = "Location",
   onChange,
   readOnly,
@@ -101,7 +101,14 @@ const LocationCascader = ({
     }
 
     targetOption.loading = true;
-    pendingExpansion.current = { targetOption, levels };
+    // Keep the exact request identity for every level.  A fetched flag alone is
+    // not sufficient: it may still describe the previous parent while a new
+    // request is being started.
+    const requestKeys = levels.reduce((keys, level) => ({
+      ...keys,
+      [level]: locationQueryKey(level, targetOption.value, "", null, null, locationTypes[level]),
+    }), {});
+    pendingExpansion.current = { targetOption, levels, requestKeys };
     levels.forEach((level) =>
       dispatch(fetchLocationsStr(modulesManager, level, null, null, targetOption.raw))
     );
@@ -110,8 +117,20 @@ const LocationCascader = ({
   useEffect(() => {
     if (!pendingExpansion.current) return;
 
-    const { targetOption, levels } = pendingExpansion.current;
-    if (!levels.every((level) => locState[`fetchedL${level}s`])) return;
+    const { targetOption, levels, requestKeys } = pendingExpansion.current;
+    const status = expansionStatus({ levels, requestKeys }, locState);
+    if (status === "stale" || status === "pending") return;
+
+    if (status === "error") {
+      // An error must settle the option as well as a successful empty result;
+      // otherwise rc-cascader keeps showing a spinner and retries forever.
+      targetOption.loading = false;
+      targetOption.children = [];
+      targetOption.isLeaf = true;
+      setOptions((currentOptions) => [...currentOptions]);
+      pendingExpansion.current = null;
+      return;
+    }
 
     const children = levels.flatMap((level) => (locState[`l${level}s`] || []).map((loc) => ({
         label: locationLabel(loc),
@@ -123,9 +142,12 @@ const LocationCascader = ({
 
     targetOption.loading = false;
     targetOption.children = children;
+    // D→V may legitimately have no W/V children.  Marking that option as a
+    // leaf prevents rc-cascader from repeatedly invoking loadData for [] .
+    targetOption.isLeaf = children.length === 0;
     locationCache.current[targetOption.value] = children;
 
-    setOptions([...options]); // trigger re-render
+    setOptions((currentOptions) => [...currentOptions]); // trigger re-render
     pendingExpansion.current = null;
   }, [locState]);
 

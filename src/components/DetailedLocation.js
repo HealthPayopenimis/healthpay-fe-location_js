@@ -76,8 +76,15 @@ class DetailedLocation extends Component {
 
   onDistrictChange = (d) => {
     let state = { ...this.state };
+    const selectedRegion = state["location_-2"];
     if (!state[`location_-2`] && !!d) {
       state[`location_-2`] = d.parent;
+    }
+    // CoarseLocation emits null when its district is cleared.  Keep the
+    // already selected region in that case; only the district and optional
+    // descendants are being cleared.
+    if (!d && selectedRegion) {
+      state["location_-2"] = selectedRegion;
     }
     state[`location_-1`] = d;
     for (let i = 0; i < this.locationTypes.length - 2; i++) {

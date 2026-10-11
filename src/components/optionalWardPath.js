@@ -40,6 +40,21 @@ export const normalizeCascaderSelection = (multiple, selectedOptions) => {
   return multiple ? selected : selected[0] || null;
 };
 
+// A response is usable only when every level belongs to the expansion that is
+// currently pending.  This deliberately does not trust fetchedLNs by itself:
+// those flags can describe an earlier parent query.
+export const expansionStatus = (pending, locState = {}) => {
+  if (!pending) return "idle";
+  const { levels = [], requestKeys = {} } = pending;
+  if (!levels.every((level) => locState[`locationQueryKeyL${level}s`] === requestKeys[level])) {
+    return "stale";
+  }
+  if (!levels.every((level) => locState[`fetchedL${level}s`] || locState[`errorL${level}s`])) {
+    return "pending";
+  }
+  return levels.some((level) => locState[`errorL${level}s`]) ? "error" : "ready";
+};
+
 export const selectFamilyLocation = (previousState, index, location, types) => {
   const next = location ? locationPathState(location, types) : { ...previousState };
   next[`location_${index}`] = location;

@@ -65,6 +65,37 @@ test('cascader offers real W and direct V children of D, never a synthetic W', a
   assert.deepEqual(normalizeCascaderSelection(true, []), []);
 });
 
+test('cascader expansion status rejects stale flags and settles empty/error responses', async () => {
+  const { expansionStatus } = await modulePromise;
+  const pending = { levels: [2, 3], requestKeys: { 2: 'new-d', 3: 'new-d' } };
+  assert.equal(expansionStatus(pending, {
+    locationQueryKeyL2s: 'old-d',
+    locationQueryKeyL3s: 'new-d',
+    fetchedL2s: true,
+    fetchedL3s: true,
+  }), 'stale');
+  assert.equal(expansionStatus(pending, {
+    locationQueryKeyL2s: 'new-d',
+    locationQueryKeyL3s: 'new-d',
+    fetchedL2s: false,
+    fetchedL3s: true,
+  }), 'pending');
+  assert.equal(expansionStatus(pending, {
+    locationQueryKeyL2s: 'new-d',
+    locationQueryKeyL3s: 'new-d',
+    fetchedL2s: true,
+    fetchedL3s: true,
+    l2s: [],
+    l3s: [],
+  }), 'ready');
+  assert.equal(expansionStatus(pending, {
+    locationQueryKeyL2s: 'new-d',
+    locationQueryKeyL3s: 'new-d',
+    fetchedL2s: true,
+    errorL3s: { message: 'network' },
+  }), 'error');
+});
+
 test('required and label contracts are scoped to optional W in DetailedLocation', () => {
   const detailed = fs.readFileSync(path.join(__dirname, '../src/components/DetailedLocation.js'), 'utf8');
   const picker = fs.readFileSync(path.join(__dirname, '../src/pickers/LocationPicker.js'), 'utf8');
@@ -76,6 +107,8 @@ test('required and label contracts are scoped to optional W in DetailedLocation'
   assert.match(picker, /optionalLabel \? `Location\$\{locationLevel\}Picker\.optionalLabel`/);
   assert.match(actions, /filters\.push\(`parent_Uuid: "\$\{parent\.uuid\}"`\)/);
   assert.equal(en['location.Location2Picker.optionalLabel'], 'Municipality (optional)');
+  assert.match(detailed, /const selectedRegion = state\["location_-2"\]/);
+  assert.match(detailed, /if \(!d && selectedRegion\)/);
 });
 
 test('query actions carry distinct parent/search identities for stale-response guards', () => {
