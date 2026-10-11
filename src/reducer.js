@@ -29,18 +29,22 @@ function reducer(
     fetchedL0s: false,
     l0s: [],
     errorL0s: null,
+    locationQueryKeyL0s: null,
     fetchingL1s: false,
     fetchedL1s: false,
     l1s: [],
     errorL1s: null,
+    locationQueryKeyL1s: null,
     fetchingL2s: false,
     fetchedL2s: false,
     l2s: [],
     errorL2s: null,
+    locationQueryKeyL2s: null,
     fetchingL3s: false,
     fetchedL3s: false,
     l3s: [],
     errorL3s: null,
+    locationQueryKeyL3s: null,
     submittingMutation: false,
     mutation: {},
     userL0s: [],
@@ -61,6 +65,7 @@ function reducer(
     fetchingLocationsByUuids: false,
     fetchedLocationsByUuids: false,
     errorLocationsByUuids: null,
+    locationQueryKeyByUuids: null,
   },
   action,
 ) {
@@ -196,8 +201,10 @@ function reducer(
         l2s: [],
         l3s: [],
         errorL0s: null,
+        locationQueryKeyL0s: action.meta?.locationQueryKey || null,
       };
     case "LOCATION_LOCATIONS_0_RESP":
+      if (state.locationQueryKeyL0s && state.locationQueryKeyL0s !== action.meta?.locationQueryKey) return state;
       return {
         ...state,
         fetchingL0s: false,
@@ -206,6 +213,7 @@ function reducer(
         errorL0s: formatGraphQLError(action.payload),
       };
     case "LOCATION_LOCATIONS_0_ERR":
+      if (state.locationQueryKeyL0s && state.locationQueryKeyL0s !== action.meta?.locationQueryKey) return state;
       return {
         ...state,
         fetchingL0s: false,
@@ -220,8 +228,10 @@ function reducer(
         l2s: [],
         l3s: [],
         errorL1s: null,
+        locationQueryKeyL1s: action.meta?.locationQueryKey || null,
       };
     case "LOCATION_LOCATIONS_1_RESP":
+      if (state.locationQueryKeyL1s && state.locationQueryKeyL1s !== action.meta?.locationQueryKey) return state;
       return {
         ...state,
         fetchingL1s: false,
@@ -230,6 +240,7 @@ function reducer(
         errorL1s: formatGraphQLError(action.payload),
       };
     case "LOCATION_LOCATIONS_1_ERR":
+      if (state.locationQueryKeyL1s && state.locationQueryKeyL1s !== action.meta?.locationQueryKey) return state;
       return {
         ...state,
         fetchingL1s: false,
@@ -241,6 +252,7 @@ function reducer(
         l1s: [],
         l2s: [],
         l3s: [],
+        locationQueryKeyL1s: null,
       };
     case "LOCATION_LOCATIONS_2_REQ":
       return {
@@ -250,8 +262,10 @@ function reducer(
         l2s: [],
         l3s: [],
         errorL2s: null,
+        locationQueryKeyL2s: action.meta?.locationQueryKey || null,
       };
     case "LOCATION_LOCATIONS_2_RESP":
+      if (state.locationQueryKeyL2s && state.locationQueryKeyL2s !== action.meta?.locationQueryKey) return state;
       return {
         ...state,
         fetchingL2s: false,
@@ -260,6 +274,7 @@ function reducer(
         errorL2s: formatGraphQLError(action.payload),
       };
     case "LOCATION_LOCATIONS_2_ERR":
+      if (state.locationQueryKeyL2s && state.locationQueryKeyL2s !== action.meta?.locationQueryKey) return state;
       return {
         ...state,
         fetchingL2s: false,
@@ -270,6 +285,7 @@ function reducer(
         ...state,
         l2s: [],
         l3s: [],
+        locationQueryKeyL2s: null,
       };
     case "LOCATION_LOCATIONS_3_REQ":
       return {
@@ -278,8 +294,10 @@ function reducer(
         fetchedL3s: false,
         l3s: [],
         errorL3s: null,
+        locationQueryKeyL3s: action.meta?.locationQueryKey || null,
       };
     case "LOCATION_LOCATIONS_3_RESP":
+      if (state.locationQueryKeyL3s && state.locationQueryKeyL3s !== action.meta?.locationQueryKey) return state;
       return {
         ...state,
         fetchingL3s: false,
@@ -288,6 +306,7 @@ function reducer(
         errorL3s: formatGraphQLError(action.payload),
       };
     case "LOCATION_LOCATIONS_3_ERR":
+      if (state.locationQueryKeyL3s && state.locationQueryKeyL3s !== action.meta?.locationQueryKey) return state;
       return {
         ...state,
         fetchingL3s: false,
@@ -297,6 +316,7 @@ function reducer(
       return {
         ...state,
         l3s: [],
+        locationQueryKeyL3s: null,
       };
     case "LOCATION_FILTER_SELECTED":
       let newState = { ...state };
@@ -525,8 +545,10 @@ function reducer(
         fetchedLocationsByUuids: false,
         locationsByUuids: [],
         errorLocationsByUuids: null,
+        locationQueryKeyByUuids: action.meta?.locationQueryKey || null,
       };
     case "LOCATION_LOCATIONS_BY_UUIDS_RESP":
+      if (state.locationQueryKeyByUuids && state.locationQueryKeyByUuids !== action.meta?.locationQueryKey) return state;
       const fetchedLocations = parseData(action.payload.data.locationsStr);
       return {
         ...state,
@@ -536,6 +558,7 @@ function reducer(
         errorLocationsByUuids: formatGraphQLError(action.payload),
       };
     case "LOCATION_LOCATIONS_BY_UUIDS_ERR":
+      if (state.locationQueryKeyByUuids && state.locationQueryKeyByUuids !== action.meta?.locationQueryKey) return state;
       return {
         ...state,
         fetchingLocationsByUuids: false,
@@ -548,6 +571,7 @@ function reducer(
         fetchedLocationsByUuids: true,
         locationsByUuids: [],
         errorLocationsByUuids: null,
+        locationQueryKeyByUuids: null,
       };
     case "CORE_AUTH_LOGOUT":
       return {

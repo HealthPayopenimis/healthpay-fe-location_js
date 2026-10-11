@@ -9,7 +9,7 @@ import { withTheme, withStyles } from "@material-ui/core/styles";
 import { useModulesManager, useTranslations } from "@openimis/fe-core";
 import { fetchLocationsStr, fetchLocationsByUuids } from "../actions";
 import { locationLabel } from "../utils";
-import { nextLocationLevels } from "../components/optionalWardPath";
+import { nextLocationLevels, normalizeCascaderSelection } from "../components/optionalWardPath";
 import _ from "lodash";
 
 const styles = () => ({
@@ -149,7 +149,10 @@ const LocationCascader = ({
       }
     } else {
       setDefaultValue([]);
-      setLocations("");
+      setLocations(multiple ? [] : "");
+      setOptions((currentOptions) => currentOptions.map((option) => ({ ...option, children: undefined })));
+      locationCache.current = {};
+      pendingExpansion.current = null;
     }
   }, [value, multiple]);
 
@@ -176,15 +179,15 @@ const LocationCascader = ({
   const handleCascaderChange = (uuids, selectedOptions) => {
     // selectedOptions contains the selected location and all its parent levels for each selection
     // unwrap to keep only the lowest level for each selection
-    const unnestedOptions = (multiple ? selectedOptions : [selectedOptions]).map(opts => opts[opts.length - 1])
-    const rawVals = unnestedOptions.map(selected => selected.raw)
-    setLocations(rawVals);
-    onChange?.(multiple ? rawVals : rawVals[0]);
+    const normalized = normalizeCascaderSelection(multiple, multiple ? selectedOptions : [selectedOptions]);
+    setLocations(multiple ? normalized : normalized ? locationLabel(normalized) : "");
+    onChange?.(normalized);
   };
 
   return (
     <div className={classes.root}>
       <Cascader
+        key={defaultValue.join(",")}
         options={options}
         defaultValue={defaultValue}
         loadData={loadData}

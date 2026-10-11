@@ -53,12 +53,16 @@ test('clearing a V preserves chosen W and requires another V to save family', as
 });
 
 test('cascader offers real W and direct V children of D, never a synthetic W', async () => {
-  const { hasOptionalWard, nextLocationLevels } = await modulePromise;
+  const { hasOptionalWard, nextLocationLevels, normalizeCascaderSelection } = await modulePromise;
   assert.equal(hasOptionalWard(types), true);
   assert.deepEqual(nextLocationLevels(1, 4, types), [2, 3]);
   assert.deepEqual(nextLocationLevels(2, 4, types), [3]);
   assert.deepEqual(nextLocationLevels(3, 4, types), []);
   assert.deepEqual(nextLocationLevels(1, 4, ['R','D','W','X']), [2]);
+  const option = { raw: directV };
+  assert.equal(normalizeCascaderSelection(false, [[option]]), directV);
+  assert.equal(normalizeCascaderSelection(false, []), null);
+  assert.deepEqual(normalizeCascaderSelection(true, []), []);
 });
 
 test('required and label contracts are scoped to optional W in DetailedLocation', () => {
@@ -72,4 +76,14 @@ test('required and label contracts are scoped to optional W in DetailedLocation'
   assert.match(picker, /optionalLabel \? `Location\$\{locationLevel\}Picker\.optionalLabel`/);
   assert.match(actions, /filters\.push\(`parent_Uuid: "\$\{parent\.uuid\}"`\)/);
   assert.equal(en['location.Location2Picker.optionalLabel'], 'Municipality (optional)');
+});
+
+test('query actions carry distinct parent/search identities for stale-response guards', () => {
+  const actions = fs.readFileSync(path.join(__dirname, '../src/actions.js'), 'utf8');
+  const reducer = fs.readFileSync(path.join(__dirname, '../src/reducer.js'), 'utf8');
+  assert.match(actions, /locationQueryKey/);
+  assert.match(actions, /parentUuid/);
+  assert.match(actions, /searchString/);
+  assert.match(reducer, /locationQueryKeyL2s/);
+  assert.match(reducer, /!== action\.meta\?\.locationQueryKey\) return state/);
 });

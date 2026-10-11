@@ -173,7 +173,20 @@ export function fetchLocations(levels, type, parent) {
     "clientMutationId",
   ]);
 
-  return graphql(payload, `LOCATION_LOCATIONS_${type}`);
+  return graphql(payload, `LOCATION_LOCATIONS_${type}`, {
+    locationQueryKey: locationQueryKey(type, parent && parent.uuid, "", null, null, levels[type]),
+  });
+}
+
+export function locationQueryKey(level, parentUuid = null, searchString = "", parentUuids = null, first = null, type = null) {
+  return JSON.stringify({
+    level,
+    type,
+    parentUuid: parentUuid || null,
+    searchString: searchString || "",
+    parentUuids: parentUuids || null,
+    first: first || null,
+  });
 }
 
 export function fetchLocationsStr(mm, level, regions = null, districts = null, parent, str='', first) {
@@ -196,6 +209,16 @@ export function fetchLocationsStr(mm, level, regions = null, districts = null, p
       `,
     {},
     `LOCATION_LOCATIONS_${level}`,
+    {
+      locationQueryKey: locationQueryKey(
+        level,
+        parent && parent.uuid,
+        str,
+        parent ? null : { regions, districts },
+        first,
+        types[level],
+      ),
+    },
   );
 }
 
@@ -218,6 +241,7 @@ export function fetchLocationsByUuids(uuids, maxLevel = 4) {
       `,
     {},
     `LOCATION_LOCATIONS_BY_UUIDS`,
+    { locationQueryKey: JSON.stringify({ uuids, maxLevel }) },
   );
 }
 
@@ -237,7 +261,9 @@ export function fetchParentLocationsStr(
   }
   const projections = ["id", "uuid", "type", "code", "name", nestParentsProjections(level)];
   const payload = formatPageQuery("locationsStr", filters, projections);
-  return graphql(payload, `LOCATION_LOCATIONS_${level}`);
+  return graphql(payload, `LOCATION_LOCATIONS_${level}`, {
+    locationQueryKey: locationQueryKey(level, null, searchString, parentUuids, first, types[level]),
+  });
 }
 
 export function clearLocations(type) {

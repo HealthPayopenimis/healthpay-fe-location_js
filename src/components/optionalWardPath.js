@@ -29,6 +29,17 @@ export const nextLocationLevels = (level, maxLevel, types) => {
   return level + 1 < maxLevel ? [level + 1] : [];
 };
 
+// rc-cascader supplies empty option paths when the current selection is cleared.
+// Keep the callback contract stable instead of dereferencing an absent option.
+export const normalizeCascaderSelection = (multiple, selectedOptions) => {
+  const paths = Array.isArray(selectedOptions) ? selectedOptions : [];
+  const selected = paths
+    .map((path) => (Array.isArray(path) ? path[path.length - 1] : path))
+    .filter(Boolean)
+    .map((option) => option.raw);
+  return multiple ? selected : selected[0] || null;
+};
+
 export const selectFamilyLocation = (previousState, index, location, types) => {
   const next = location ? locationPathState(location, types) : { ...previousState };
   next[`location_${index}`] = location;
