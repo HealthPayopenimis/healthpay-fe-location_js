@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */
 
-const React = require("react");
+const mockReact = require("react");
 const ReactDOM = require("react-dom");
 const { act } = require("react-dom/test-utils");
 
@@ -9,7 +9,7 @@ let dispatch;
 let autocompleteProps;
 let container;
 
-const queryKey = (level, parentUuid = null, searchString = "", parentUuids = null, first = null, type = null) => JSON.stringify({
+const mockQueryKey = (level, parentUuid = null, searchString = "", parentUuids = null, first = null, type = null) => JSON.stringify({
   level,
   type,
   parentUuid: parentUuid || null,
@@ -21,11 +21,11 @@ const queryKey = (level, parentUuid = null, searchString = "", parentUuids = nul
 jest.mock("@material-ui/lab", () => ({
   Autocomplete: (props) => {
     autocompleteProps = props;
-    return React.createElement("div", { "data-testid": "autocomplete" });
+    return mockReact.createElement("div", { "data-testid": "autocomplete" });
   },
 }));
 jest.mock("@material-ui/core", () => ({
-  TextField: (props) => React.createElement("input", props),
+  TextField: (props) => mockReact.createElement("input", props),
 }));
 jest.mock("@material-ui/core/styles", () => ({
   withStyles: () => (Component) => Component,
@@ -42,8 +42,8 @@ jest.mock("@openimis/fe-core", () => ({
   withStyles: () => (Component) => Component,
   useTranslations: () => ({ formatMessage: (key) => key }),
   useDebounceCb: (callback, duration) => {
-    const [payload, setPayload] = React.useState(null);
-    React.useEffect(() => {
+    const [payload, setPayload] = mockReact.useState(null);
+    mockReact.useEffect(() => {
       if (payload) {
         const timeout = setTimeout(() => callback(...payload), duration);
         return () => clearTimeout(timeout);
@@ -57,7 +57,7 @@ jest.mock("../src/actions", () => ({
   clearLocations: jest.fn((level) => ({ type: `LOCATION_LOCATIONS_${level}_CLEAR` })),
   fetchLocationsStr: jest.fn((...args) => ({ type: "LOCATION_LOCATIONS_REQ", args })),
   fetchParentLocationsStr: jest.fn((...args) => ({ type: "LOCATION_PARENT_LOCATIONS_REQ", args })),
-  locationQueryKey: jest.fn(queryKey),
+  locationQueryKey: jest.fn((...args) => mockQueryKey(...args)),
 }));
 
 const { LocationPicker } = require("../src/pickers/LocationPicker");
@@ -66,8 +66,8 @@ const { fetchLocationsStr } = require("../src/actions");
 const region = { uuid: "r", type: "R", code: "R", name: "Region" };
 const district = { uuid: "d", type: "D", code: "D", name: "District", parent: region };
 const typedSearch = "EG-01-D01-W01-V01";
-const emptyRequestKey = queryKey(3, district.uuid, "", null, null, "V");
-const typedRequestKey = queryKey(3, district.uuid, typedSearch, null, null, "V");
+const emptyRequestKey = mockQueryKey(3, district.uuid, "", null, null, "V");
+const typedRequestKey = mockQueryKey(3, district.uuid, typedSearch, null, null, "V");
 
 function render(state = currentState) {
   currentState = state;
