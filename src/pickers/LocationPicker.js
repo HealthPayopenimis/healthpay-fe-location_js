@@ -6,7 +6,12 @@ import { withTheme, withStyles } from "@material-ui/core/styles";
 import { withModulesManager, combine, useTranslations, useDebounceCb } from "@openimis/fe-core";
 import _debounce from "lodash/debounce";
 import { locationLabel } from "../utils";
-import { fetchLocationsStr, clearLocations, fetchParentLocationsStr } from "../actions";
+import {
+  fetchLocationsStr,
+  clearLocations,
+  fetchParentLocationsStr,
+  locationQueryKey,
+} from "../actions";
 import _ from "lodash";
 
 const styles = () => ({
@@ -15,7 +20,7 @@ const styles = () => ({
   },
 });
 
-const LocationPicker = (props) => {
+export const LocationPicker = (props) => {
   const {
     modulesManager,
     multiple,
@@ -44,11 +49,24 @@ const LocationPicker = (props) => {
 
   const isLoading = useSelector((state) => state.loc[`fetchingL${locationLevel}s`]);
   const options = useSelector((state) => state.loc[`l${locationLevel}s`] ?? []);
+  const loadedQueryKey = useSelector((state) => state.loc[`locationQueryKeyL${locationLevel}s`]);
 
   const restricted = useSelector((state) => state.loc[`userL${locationLevel}s`]);
 
   const regions = useSelector((state) => state.loc[`l0s`]);
   const districts = useSelector((state) => state.loc[`l1s`]);
+
+  const locationTypes = modulesManager.getConf("fe-location", "Location.types", ["R", "D", "W", "V"]);
+  const queryKey = parentLocations
+    ? locationQueryKey(locationLevel, null, searchString, parentLocations, 20, locationTypes[locationLevel])
+    : locationQueryKey(
+      locationLevel,
+      parentLocation?.uuid,
+      searchString,
+      parentLocation ? null : { regions: regions?.[0]?.uuid, districts: districts?.[0]?.uuid },
+      null,
+      locationTypes[locationLevel],
+    );
 
   const dispatch = useDispatch();
   const handleChange = (__, value) => {
@@ -65,8 +83,8 @@ const LocationPicker = (props) => {
   useEffect(() => {
     if (
       open &&
-      !isLoading &&
-      searchString.length >= modulesManager.getConf("fe-location", "locationMinCharLookup", 2)
+      searchString.length >= modulesManager.getConf("fe-location", "locationMinCharLookup", 2) &&
+      loadedQueryKey !== queryKey
     ) {
       if (parentLocations) {
         dispatch(fetchParentLocationsStr(modulesManager, locationLevel, parentLocations, searchString, 20));
@@ -81,7 +99,7 @@ const LocationPicker = (props) => {
         ));
       }
     }
-  }, [searchString, parentLocation, parentLocations]);
+  }, [searchString, parentLocation, parentLocations, loadedQueryKey, queryKey]);
 
   useEffect(() => {
     if (open) {
