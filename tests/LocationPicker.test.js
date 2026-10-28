@@ -4,9 +4,9 @@ const mockReact = require("react");
 const ReactDOM = require("react-dom");
 const { act } = require("react-dom/test-utils");
 
-let currentState;
-let dispatch;
-let autocompleteProps;
+let mockCurrentState;
+let mockDispatch;
+let mockAutocompleteProps;
 let container;
 
 const mockQueryKey = (level, parentUuid = null, searchString = "", parentUuids = null, first = null, type = null) => JSON.stringify({
@@ -20,10 +20,10 @@ const mockQueryKey = (level, parentUuid = null, searchString = "", parentUuids =
 
 jest.mock("@material-ui/lab", () => ({
   Autocomplete: (props) => {
-    autocompleteProps = props;
+    mockAutocompleteProps = props;
     return mockReact.createElement("div", { "data-testid": "autocomplete" });
   },
-}));
+}), { virtual: true });
 jest.mock("@material-ui/core", () => ({
   TextField: (props) => mockReact.createElement("input", props),
 }));
@@ -32,8 +32,8 @@ jest.mock("@material-ui/core/styles", () => ({
   withTheme: (Component) => Component,
 }));
 jest.mock("react-redux", () => ({
-  useDispatch: () => dispatch,
-  useSelector: (selector) => selector(currentState),
+  useDispatch: () => mockDispatch,
+  useSelector: (selector) => selector(mockCurrentState),
 }));
 jest.mock("@openimis/fe-core", () => ({
   combine: (...enhancers) => (Component) => Component,
@@ -69,11 +69,11 @@ const typedSearch = "EG-01-D01-W01-V01";
 const emptyRequestKey = mockQueryKey(3, district.uuid, "", null, null, "V");
 const typedRequestKey = mockQueryKey(3, district.uuid, typedSearch, null, null, "V");
 
-function render(state = currentState) {
-  currentState = state;
+function render(state = mockCurrentState) {
+  mockCurrentState = state;
   if (!container) container = document.createElement("div");
   act(() => {
-    ReactDOM.render(React.createElement(LocationPicker, {
+    ReactDOM.render(mockReact.createElement(LocationPicker, {
       modulesManager: {
         getConf: (module, key, fallback) => {
           if (key === "Location.types") return ["R", "D", "W", "V"];
@@ -94,7 +94,7 @@ function render(state = currentState) {
 beforeEach(() => {
   jest.useFakeTimers();
   jest.clearAllMocks();
-  currentState = {
+  mockCurrentState = {
     loc: {
       fetchingL3s: true,
       l3s: [],
@@ -104,8 +104,8 @@ beforeEach(() => {
       l1s: [district],
     },
   };
-  dispatch = jest.fn();
-  autocompleteProps = null;
+  mockDispatch = jest.fn();
+  mockAutocompleteProps = null;
   container = null;
 });
 
@@ -116,11 +116,11 @@ afterEach(() => {
 test("dispatches the typed V query while the prior empty-query request is still loading", () => {
   render();
 
-  act(() => autocompleteProps.onOpen());
+  act(() => mockAutocompleteProps.onOpen());
   expect(fetchLocationsStr).toHaveBeenCalledTimes(1);
   expect(fetchLocationsStr.mock.calls[0][5]).toBe("");
 
-  act(() => autocompleteProps.onInputChange(null, typedSearch));
+  act(() => mockAutocompleteProps.onInputChange(null, typedSearch));
   act(() => jest.advanceTimersByTime(400));
 
   expect(fetchLocationsStr).toHaveBeenCalledTimes(2);
@@ -128,12 +128,12 @@ test("dispatches the typed V query while the prior empty-query request is still 
 });
 
 test("does not re-dispatch a typed V query after the same key is current", () => {
-  currentState.loc.locationQueryKeyL3s = typedRequestKey;
-  currentState.loc.fetchingL3s = false;
+  mockCurrentState.loc.locationQueryKeyL3s = typedRequestKey;
+  mockCurrentState.loc.fetchingL3s = false;
   render();
 
-  act(() => autocompleteProps.onOpen());
-  act(() => autocompleteProps.onInputChange(null, typedSearch));
+  act(() => mockAutocompleteProps.onOpen());
+  act(() => mockAutocompleteProps.onInputChange(null, typedSearch));
   act(() => jest.advanceTimersByTime(400));
 
   const typedCalls = fetchLocationsStr.mock.calls.filter((call) => call[5] === typedSearch);
