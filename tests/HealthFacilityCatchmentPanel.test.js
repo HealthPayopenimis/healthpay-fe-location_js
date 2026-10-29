@@ -23,7 +23,7 @@ jest.mock("react-redux", () => ({
 }));
 jest.mock("react-intl", () => ({
   injectIntl: (Component) => Component,
-}));
+}), { virtual: true });
 jest.mock("lodash", () => ({
   isEqual: (left, right) => JSON.stringify(left) === JSON.stringify(right),
 }));
