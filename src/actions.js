@@ -108,7 +108,7 @@ export function fetchHealthFacility(mm, healthFacilityUuid, healthFacilityCode) 
     "legalForm{code}",
     "level",
     "subLevel{code}",
-    "location{id, uuid, code, name, parent{id, uuid, code, name}}",
+    "location{id, uuid, type, code, name, parent{id, uuid, type, code, name}}",
     "servicesPricelist{id, uuid, name}",
     "itemsPricelist{id, uuid, name}",
     "catchments{id, location{id, uuid, code, name}, catchment}",
@@ -150,7 +150,14 @@ export function fetchHealthFacilitySummaries(filters) {
   return graphql(payload, "LOCATION_HEALTH_FACILITY_SEARCHER");
 }
 
-export function fetchLocations(levels, type, parent) {
+export function fetchLocations(
+  levels,
+  type,
+  parent,
+  locationRequestGeneration = null,
+  locationRequestOwner = null,
+  locationRequestSerial = null,
+) {
   let filters = [
     `
     type: "${levels[type]}",
@@ -175,6 +182,9 @@ export function fetchLocations(levels, type, parent) {
 
   return graphql(payload, `LOCATION_LOCATIONS_${type}`, {
     locationQueryKey: locationQueryKey(type, parent && parent.uuid, "", null, null, levels[type]),
+    locationRequestGeneration,
+    locationRequestOwner,
+    locationRequestSerial,
   });
 }
 
@@ -266,9 +276,17 @@ export function fetchParentLocationsStr(
   });
 }
 
-export function clearLocations(type) {
+export function clearLocations(
+  type,
+  locationRequestGeneration = null,
+  locationRequestOwner = null,
+  locationRequestSerial = null,
+) {
   return (dispatch) => {
-    dispatch({ type: `LOCATION_LOCATIONS_${type}_CLEAR` });
+    dispatch({
+      type: `LOCATION_LOCATIONS_${type}_CLEAR`,
+      meta: { locationRequestGeneration, locationRequestOwner, locationRequestSerial },
+    });
   };
 }
 

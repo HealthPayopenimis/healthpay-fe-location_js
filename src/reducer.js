@@ -10,6 +10,23 @@ import {
 import _ from "lodash";
 import { locationLabel } from "./utils";
 
+const locationRequestIdentity = (meta = {}) => ({
+  queryKey: meta.locationQueryKey ?? null,
+  owner: meta.locationRequestOwner ?? null,
+  serial: meta.locationRequestSerial ?? null,
+  generation: meta.locationRequestGeneration ?? null,
+});
+
+const locationRequestMatches = (state, level, meta) => {
+  const actual = locationRequestIdentity(meta);
+  return (
+    (state[`locationQueryKeyL${level}s`] ?? null) === actual.queryKey &&
+    (state[`locationRequestOwnerL${level}s`] ?? null) === actual.owner &&
+    (state[`locationRequestSerialL${level}s`] ?? null) === actual.serial &&
+    (state[`locationRequestGenerationL${level}s`] ?? null) === actual.generation
+  );
+};
+
 function reducer(
   state = {
     fetchingHealthFacilityFullPath: false,
@@ -202,9 +219,12 @@ function reducer(
         l3s: [],
         errorL0s: null,
         locationQueryKeyL0s: action.meta?.locationQueryKey || null,
+        locationRequestOwnerL0s: action.meta?.locationRequestOwner ?? null,
+        locationRequestSerialL0s: action.meta?.locationRequestSerial ?? null,
+        locationRequestGenerationL0s: action.meta?.locationRequestGeneration ?? null,
       };
     case "LOCATION_LOCATIONS_0_RESP":
-      if (state.locationQueryKeyL0s && state.locationQueryKeyL0s !== action.meta?.locationQueryKey) return state;
+      if (!locationRequestMatches(state, 0, action.meta)) return state;
       return {
         ...state,
         fetchingL0s: false,
@@ -213,7 +233,7 @@ function reducer(
         errorL0s: formatGraphQLError(action.payload),
       };
     case "LOCATION_LOCATIONS_0_ERR":
-      if (state.locationQueryKeyL0s && state.locationQueryKeyL0s !== action.meta?.locationQueryKey) return state;
+      if (!locationRequestMatches(state, 0, action.meta)) return state;
       return {
         ...state,
         fetchingL0s: false,
@@ -229,9 +249,12 @@ function reducer(
         l3s: [],
         errorL1s: null,
         locationQueryKeyL1s: action.meta?.locationQueryKey || null,
+        locationRequestOwnerL1s: action.meta?.locationRequestOwner ?? null,
+        locationRequestSerialL1s: action.meta?.locationRequestSerial ?? null,
+        locationRequestGenerationL1s: action.meta?.locationRequestGeneration ?? null,
       };
     case "LOCATION_LOCATIONS_1_RESP":
-      if (state.locationQueryKeyL1s && state.locationQueryKeyL1s !== action.meta?.locationQueryKey) return state;
+      if (!locationRequestMatches(state, 1, action.meta)) return state;
       return {
         ...state,
         fetchingL1s: false,
@@ -240,7 +263,7 @@ function reducer(
         errorL1s: formatGraphQLError(action.payload),
       };
     case "LOCATION_LOCATIONS_1_ERR":
-      if (state.locationQueryKeyL1s && state.locationQueryKeyL1s !== action.meta?.locationQueryKey) return state;
+      if (!locationRequestMatches(state, 1, action.meta)) return state;
       return {
         ...state,
         fetchingL1s: false,
@@ -253,6 +276,9 @@ function reducer(
         l2s: [],
         l3s: [],
         locationQueryKeyL1s: null,
+        locationRequestOwnerL1s: action.meta?.locationRequestOwner ?? null,
+        locationRequestSerialL1s: action.meta?.locationRequestSerial ?? null,
+        locationRequestGenerationL1s: action.meta?.locationRequestGeneration ?? null,
       };
     case "LOCATION_LOCATIONS_2_REQ":
       return {
@@ -263,9 +289,12 @@ function reducer(
         l3s: [],
         errorL2s: null,
         locationQueryKeyL2s: action.meta?.locationQueryKey || null,
+        locationRequestOwnerL2s: action.meta?.locationRequestOwner ?? null,
+        locationRequestSerialL2s: action.meta?.locationRequestSerial ?? null,
+        locationRequestGenerationL2s: action.meta?.locationRequestGeneration ?? null,
       };
     case "LOCATION_LOCATIONS_2_RESP":
-      if (state.locationQueryKeyL2s && state.locationQueryKeyL2s !== action.meta?.locationQueryKey) return state;
+      if (!locationRequestMatches(state, 2, action.meta)) return state;
       return {
         ...state,
         fetchingL2s: false,
@@ -274,7 +303,7 @@ function reducer(
         errorL2s: formatGraphQLError(action.payload),
       };
     case "LOCATION_LOCATIONS_2_ERR":
-      if (state.locationQueryKeyL2s && state.locationQueryKeyL2s !== action.meta?.locationQueryKey) return state;
+      if (!locationRequestMatches(state, 2, action.meta)) return state;
       return {
         ...state,
         fetchingL2s: false,
@@ -286,6 +315,9 @@ function reducer(
         l2s: [],
         l3s: [],
         locationQueryKeyL2s: null,
+        locationRequestOwnerL2s: action.meta?.locationRequestOwner ?? null,
+        locationRequestSerialL2s: action.meta?.locationRequestSerial ?? null,
+        locationRequestGenerationL2s: action.meta?.locationRequestGeneration ?? null,
       };
     case "LOCATION_LOCATIONS_3_REQ":
       return {
@@ -295,9 +327,12 @@ function reducer(
         l3s: [],
         errorL3s: null,
         locationQueryKeyL3s: action.meta?.locationQueryKey || null,
+        locationRequestOwnerL3s: action.meta?.locationRequestOwner ?? null,
+        locationRequestSerialL3s: action.meta?.locationRequestSerial ?? null,
+        locationRequestGenerationL3s: action.meta?.locationRequestGeneration ?? null,
       };
     case "LOCATION_LOCATIONS_3_RESP":
-      if (state.locationQueryKeyL3s && state.locationQueryKeyL3s !== action.meta?.locationQueryKey) return state;
+      if (!locationRequestMatches(state, 3, action.meta)) return state;
       return {
         ...state,
         fetchingL3s: false,
@@ -306,7 +341,7 @@ function reducer(
         errorL3s: formatGraphQLError(action.payload),
       };
     case "LOCATION_LOCATIONS_3_ERR":
-      if (state.locationQueryKeyL3s && state.locationQueryKeyL3s !== action.meta?.locationQueryKey) return state;
+      if (!locationRequestMatches(state, 3, action.meta)) return state;
       return {
         ...state,
         fetchingL3s: false,
@@ -317,6 +352,9 @@ function reducer(
         ...state,
         l3s: [],
         locationQueryKeyL3s: null,
+        locationRequestOwnerL3s: action.meta?.locationRequestOwner ?? null,
+        locationRequestSerialL3s: action.meta?.locationRequestSerial ?? null,
+        locationRequestGenerationL3s: action.meta?.locationRequestGeneration ?? null,
       };
     case "LOCATION_FILTER_SELECTED":
       let newState = { ...state };

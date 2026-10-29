@@ -118,5 +118,5 @@ test('query actions carry distinct parent/search identities for stale-response g
   assert.match(actions, /parentUuid/);
   assert.match(actions, /searchString/);
   assert.match(reducer, /locationQueryKeyL2s/);
-  assert.match(reducer, /!== action\.meta\?\.locationQueryKey\) return state/);
+  assert.match(reducer, /locationRequestMatches\(state, 2, action\.meta\)/);
 });
