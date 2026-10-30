@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'issue37/**'
+      - 'fix/issue40-**'
   workflow_dispatch:
 
 jobs:
